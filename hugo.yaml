@@ -19,7 +19,9 @@ params:
     - icon: "fa-brands fa-github"
       title: "github"
       url: "https://github.com/davidkschwob"
-
+    - icon: "fa-brands fa-instagram"
+      title: "github"
+      url: "https://instagram.com/pickstuffupputstuffdown"
 
 sectionPagesMenu: "main"
 pagination:
