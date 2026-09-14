@@ -20,7 +20,7 @@ Here is a fancy link to my github site:*
 It just sorta magically shows up by using a blowfish-specific short code:
 
 ```hugo
-{{</* github repo="davidkschwob/grumpydev" */>}}
+{{</* github repo="davidkschwob/drydave" */>}}
 ```
 
 * As you can well imagine, there's not much going on there. :)

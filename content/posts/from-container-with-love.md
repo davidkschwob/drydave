@@ -23,7 +23,7 @@ e.g. So that a local hugo binary is not required.
 ```powershell
 > podman container list
 CONTAINER ID  IMAGE                             COMMAND               CREATED       STATUS        PORTS                   NAMES
-64440b0f5291  docker.io/hugomods/hugo:std-exts  server -D --bind ...  16 hours ago  Up 6 minutes  0.0.0.0:1313->1313/tcp  grumpydev_hugo_1
+64440b0f5291  docker.io/hugomods/hugo:std-exts  server -D --bind ...  16 hours ago  Up 6 minutes  0.0.0.0:1313->1313/tcp  drydave_hugo_1
 ```
 
 
@@ -31,7 +31,7 @@ CONTAINER ID  IMAGE                             COMMAND               CREATED   
 
 
 ```powershell
-> podman exec grumpydev_hugo_1 hugo new from-container-with-love.md
+> podman exec drydave_hugo_1 hugo new from-container-with-love.md
 WARN  Module "github.com/nunocoracao/blowfish/v2" is not compatible with this Hugo version: 0.141.0/0.152.2 extended; run "hugo mod graph" for more information.
 Content "/src/content/from-container-with-love.md" created
 ```

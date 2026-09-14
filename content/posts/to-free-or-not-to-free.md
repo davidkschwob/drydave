@@ -102,7 +102,7 @@ It's just a matter of writing different server blocks in the config file:
 
 ```js
 server {
-  server_name www.daveisagrumpydev.org;
+  server_name www.drydave.dev;
   root /var/www/html;
   index index.html;
   location / {
@@ -111,7 +111,7 @@ server {
 }
 
 server {
-  server_name dev.daveisagrumpydev.org;
+  server_name dev.drydave.dev;
   location / {
     proxy_pass http://127.0.0.1:8080;
     proxy_set_header Host  $host;
@@ -125,7 +125,7 @@ server {
 Then we just tell certbot to configure it for SSL
 
 ```bash
-sudo certbot --nginx -d www.daveisagrumpydev.org -d dev.daveisagrumpydev.org
+sudo certbot --nginx -d www.drydave.dev -d dev.drydave.dev
 ```
 BAM!
 
@@ -136,9 +136,9 @@ that we are being unsafe.
 We can use the 1 public IP and a couple of CNAMES
 for our domain and point them a different back-end services:
 
-  - daveisagrumpydev.org -> this site   
-  - dev.daveisagrumpydev.org -> svelte app with live reload  
-  - tty.daveisagrumpydev.org -> terminal over https  
+  - drydave.dev -> this site   
+  - dev.drydave.dev -> svelte app with live reload  
+  - tty.drydave.dev -> terminal over https  
 
 ## Houston
 

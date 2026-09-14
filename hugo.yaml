@@ -1,8 +1,8 @@
-baseURL: https://daveisagrumpydev.org/
+baseURL: https://drydave.dev/
 languageCode: en-us
-title: DaveIsAGrumpyDev
-copyright: "(c) 2025 SomeGrumpyDev"
-author: "SomeGrumpyDevNamedDave"
+title: DryDaveDev
+copyright: "(c) 2025 DryDave"
+author: "DryDave"
 enableGitInfo: true
 
 
@@ -12,8 +12,8 @@ params:
   theme:
     palette: "base16-light"
   about:
-    title: "daveisagrumpydev.org"
-    description: "A Grumpy Dev"
+    title: "drydave.dev"
+    description: "A Dry Dev"
     logo: "kolsch-logo.ico"
   socialLinks:
     - icon: "fa-brands fa-github"
