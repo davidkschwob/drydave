@@ -7,6 +7,17 @@ enableGitInfo: true
 
 
 theme: "risotto"
+
+security:
+  exec:
+    allow:
+      - '^(dart-)?sass$'
+      - '^go$'
+      - '^git$'
+      - '^node$'
+      - '^postcss$'
+      - '^tailwindcss$'
+
 # risotto-specific settings
 params:
   theme:
