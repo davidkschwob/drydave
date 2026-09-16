@@ -21,7 +21,7 @@ prototyping, toolchain quality, and documentation at scale.
 
 ### Database/Back-End
 
-  - Highly skilled with Oracle, MySQL, SQL Server, and PostgreSQL
+  - Highly skilled with Oracle and MySQL
   - Executed multiple platform migrations
   - Implemented ad hoc data mapping tool entirely in static PL/SQL
 

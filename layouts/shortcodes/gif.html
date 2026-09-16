@@ -1,0 +1,8 @@
+{{ $img := resources.Get ( .Get 0 ) }}
+{{ if $img }}
+{{ $fingerprint := $img | resources.Fingerprint "sha256" }}
+<img src="{{ $fingerprint.RelPermalink }}" alt="VHS Terminal Demo" />
+{{ else }}
+<!-- Fallback alert if you misspell the file path -->
+<p style="color:red;">Image not found: {{ .Get 0 }}</p>
+{{ end }}

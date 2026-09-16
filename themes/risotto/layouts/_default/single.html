@@ -1,25 +1,30 @@
 {{ define "main" }}
-    <header class="content__header">
-        <h1>{{ .Title | markdownify }}</h1>
-    </header>
-    <div class="content__body">
-        {{ .Content }}
-    </div>
-    <footer class="content__footer"></footer>
+<header class="content__header">
+  <h1>{{ .Title | markdownify }}</h1>
+</header>
+<div class="content__body">
+  {{ .Content }}
+</div>
+<footer class="content__footer"></footer>
+{{ if eq .Params.ai_generated true }}
+<p style="font-style: italic; color: #666;">
+  [Notice: This specific post was synthetically generated using an LLM pipeline and style-matched to historical logs.]
+</p>
+{{ end }}
 {{ end }}
 
 {{define "aside" }}
-    {{ if .Params.description }}<p>{{ .Params.description }}</p>{{ end }}
-    {{ if or (.Params.author) (.Params.date) }}
-        <p>
-            {{ if .Params.author }}By {{ .Params.author }}{{ if .Date }}, {{ end }}{{ end }}
-            {{ if .Date }}{{ .Date.Format "2006-01-02" }}{{ end }}
-        </p>
-    {{ end }}
+{{ if .Params.description }}<p>{{ .Params.description }}</p>{{ end }}
+{{ if or (.Params.author) (.Params.date) }}
+<p>
+  {{ if .Params.author }}By {{ .Params.author }}{{ if .Date }}, {{ end }}{{ end }}
+  {{ if .Date }}{{ .Date.Format "2006-01-02" }}{{ end }}
+</p>
+{{ end }}
 
-    {{ if and (.Params.toc) (.TableOfContents) }}
-	    <hr>
-	    On this page:
-	    {{ .TableOfContents }}
-    {{ end }}
+{{ if and (.Params.toc) (.TableOfContents) }}
+<hr>
+On this page:
+{{ .TableOfContents }}
+{{ end }}
 {{ end }}
