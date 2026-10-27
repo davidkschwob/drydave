@@ -2,6 +2,7 @@
 import os
 import sys
 import subprocess
+import argparse
 from datetime import datetime
 from groq import Groq
 
@@ -44,19 +45,39 @@ def get_style_context():
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("ERROR: Please provide a blog post topic.")
-        print('Usage: gen-post "Your Topic Here"')
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Create or continue a blog post.")
+    parser.add_argument("topic", nargs="?", help="Topic for a new blog post")
+    parser.add_argument(
+        "--continue",
+        dest="continue_path",
+        metavar="POST",
+        help="Continue work on an existing post markdown file",
+    )
+    args = parser.parse_args()
+
+    if bool(args.topic) == bool(args.continue_path):
+        parser.error('provide a topic or use --continue "content/posts/post.md"')
+
+    existing_post = None
+    if args.continue_path:
+        output_file = args.continue_path
+        if not os.path.isfile(output_file) or not output_file.lower().endswith(".md"):
+            parser.error(f"existing markdown post not found: {output_file}")
+        with open(output_file, "r", encoding="utf-8") as f:
+            existing_post = f.read()
+        topic = os.path.splitext(os.path.basename(output_file))[0]
+    else:
+        topic = args.topic
+        slug = clean_slug(topic)
+        output_file = f"content/posts/{slug}.md"
+
+    if not topic:
+        parser.error("topic or post path cannot be empty")
 
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         print("ERROR: GROQ_API_KEY environment variable not set.")
         sys.exit(1)
-
-    topic = sys.argv[1]
-    slug = clean_slug(topic)
-    output_file = f"content/posts/{slug}.md"
 
     client = Groq(api_key=api_key)
     model_name = "qwen/qwen3.8-27b"
@@ -74,38 +95,43 @@ def main():
         "Paragraphs should be wrapped at 80 columns for terminal friendly viewing."
     )
 
-    # --- TURN 1: STRATEGY & PLANNING ---
-    print("Executing Turn 1: Generating structural outline...")
-    messages = [
-        {"role": "system", "content": base_system},
-        {
-            "role": "user",
-            "content": f"Create a short structural outline, target tags, and content strategy for a blog post titled: '{topic}'. Keep the plan brief.",
-        },
-    ]
-
     try:
-        response_1 = client.chat.completions.create(
-            model=model_name, messages=messages, temperature=0.3, max_tokens=300
-        )
-        strategy = response_1.choices[0].message.content
-        messages.append({"role": "assistant", "content": strategy})
-
-        # Initial draft prompt setup
-        draft_prompt = (
-            f"Now, use that exact structural outline to write the complete first draft of the post.\n\n"
-            f"CRITICAL LAYOUT RULES:\n"
-            f"1. You MUST start the text immediately with TOML front matter wrapped in +++ delimiters.\n"
-            f"2. The front matter MUST contain: title, date (YYYY-MM-DD), draft=false, tags, and 'ai_generated = true'.\n"
-            f"3. Do not use Markdown code fences (```) around the entire post.\n\n"
-            f"{style_context}\n\n"
-            f"Generate the full text draft now."
-        )
-        messages.append({"role": "user", "content": draft_prompt})
+        if existing_post is not None:
+            print(f"Continuing existing post: {output_file}")
+            messages = [
+                {"role": "system", "content": base_system},
+                {
+                    "role": "user",
+                    "content": (
+                        f"Continue work on the existing blog post titled '{topic}'. "
+                        "Use the full post below as the source of truth. Improve or "
+                        "complete it while preserving its existing ideas and Hugo "
+                        "front matter (title, date, draft, tags, and ai_generated). "
+                        "Return the entire post as raw Markdown.\n\n"
+                        f"{existing_post}"
+                    ),
+                },
+            ]
+        else:
+            # --- TURN 1: STRATEGY & PLANNING ---
+            print("Executing Turn 1: Generating structural outline...")
+            messages = [
+                {"role": "system", "content": base_system},
+                {
+                    "role": "user",
+                    "content": f"Create a short structural outline, target tags, and content strategy for a blog post titled: '{topic}'. Keep the plan brief.",
+                },
+            ]
+            response_1 = client.chat.completions.create(
+                model=model_name, messages=messages, temperature=0.3, max_tokens=300
+            )
+            strategy = response_1.choices[0].message.content
+            messages.append({"role": "assistant", "content": strategy})
 
         # --- TURN 2: DRAFT & FEEDBACK LOOP ---
         draft_prompt = (
             f"Now, use that exact structural outline to write the complete first draft of the post.\n\n"
+            f"TARGET LENGTH: Write approximately 900-1,200 words, about 3-4 screens of text in a typical terminal or editor. Develop each planned section enough to be useful, but do not pad the post.\n\n"
             f"CRITICAL LAYOUT RULES:\n"
             f"1. You MUST start the text immediately with TOML front matter wrapped in {toml_delimiter} delimiters.\n"
             f"2. The front matter MUST contain exactly:\n"
@@ -116,7 +142,8 @@ def main():
             f"   ai_generated = true\n"
             f"Generate the full text draft now."
         )
-        messages.append({"role": "user", "content": draft_prompt})
+        if existing_post is None:
+            messages.append({"role": "user", "content": draft_prompt})
 
         draft_count = 1
         while True:
@@ -124,8 +151,12 @@ def main():
                 f"\nExecuting Turn 2 (Draft #{draft_count}): Generating text payload..."
             )
             response_2 = client.chat.completions.create(
-                model=model_name, messages=messages, temperature=0.7, max_tokens=600
+                model=model_name, messages=messages, temperature=0.7, max_tokens=3000
             )
+            if response_2.choices[0].finish_reason == "length":
+                raise RuntimeError(
+                    "Draft generation hit the output token limit; increase max_tokens and retry."
+                )
             current_draft = response_2.choices[0].message.content
 
             # Print the draft formatting boundaries clearly for user review
@@ -166,27 +197,33 @@ def main():
         )
         refine_prompt = (
             "Review the finalized draft you just approved. Audit it against these zero-tolerance criteria:\n"
+            "- Preserve the target length of approximately 900-1,200 words (about 3-4 screens of text); do not shorten the post unnecessarily.\n"
             "- Does it start exactly with +++ and valid TOML front matter?\n"
             "- Is 'ai_generated = true' present inside the front matter?\n"
+            "- Preserve existing post metadata and ideas unless the user requested a change.\n"
             "- Is the entire response raw markdown rather than encapsulated inside a global code fence?\n\n"
             "If any formatting rule is broken, fix it immediately. Output ONLY the finalized, ready-to-publish Hugo markdown file text."
         )
         messages.append({"role": "user", "content": refine_prompt})
 
         response_3 = client.chat.completions.create(
-            model=model_name, messages=messages, temperature=0.1, max_tokens=700
+            model=model_name, messages=messages, temperature=0.1, max_tokens=3000
         )
+        if response_3.choices[0].finish_reason == "length":
+            raise RuntimeError(
+                "Final post refinement hit the output token limit; increase max_tokens and retry."
+            )
         final_post = response_3.choices[0].message.content
 
         if "+++" in final_post:
             final_post = final_post[final_post.find("+++") :]
 
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(final_post)
 
         print(
-            f"\nSUCCESS: Post created successfully after {draft_count} draft iterations."
+            f"\nSUCCESS: Post saved after {draft_count} draft iterations."
         )
         print(f"File saved: {output_file}")
 

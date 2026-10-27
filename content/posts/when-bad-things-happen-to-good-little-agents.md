@@ -4,6 +4,7 @@ date = 2026-10-27
 draft = false
 tags = ["ai-agents", "error-handling", "resilience", "llm-engineering", "debugging"]
 ai_generated = true
+toc = true
 +++
 
 # when bad things happen to good little agents
