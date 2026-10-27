@@ -21,7 +21,7 @@ security:
 # risotto-specific settings
 params:
   theme:
-    palette: "base16-light"
+    palette: "base16-dark"
   about:
     title: "drydave.dev"
     description: "A Dry Dev"
